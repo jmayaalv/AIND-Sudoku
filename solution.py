@@ -79,7 +79,6 @@ def naked_twins(values):
     for unit in unitlist:
         twins = __find_naked_twins(values, unit)
         if len(twins) == 2:
-            print(twins)
             twin_digits = values[twins[0]]
             for box in unit:
                 if box not in twins:
