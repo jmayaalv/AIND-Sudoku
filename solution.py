@@ -1,20 +1,7 @@
 assignments = []
 
-rows = 'ABCDEFGHI'
-cols = '123456789'
-
-
-def display(values):
-    """
-    Display the values as a 2-D grid.
-    :param  values: The sudoku in dictionary form
-    """
-    width = 1 + max(len(values[s]) for s in boxes)
-    line = '+'.join(['-' * (width * 3)] * 3)
-    for r in rows:
-        print(''.join(values[r + c].center(width) + ('|' if c in '36' else '')
-                      for c in cols))
-        if r in 'CF': print(line)
+ROWS = 'ABCDEFGHI'
+COLS = '123456789'
 
 
 def assign_value(values, box, value):
@@ -46,11 +33,12 @@ def cross(a, b):
     return [s + t for s in a for t in b]
 
 
-boxes = cross(rows, cols)
-row_units = [cross(r, cols) for r in rows]
-column_units = [cross(rows, c) for c in cols]
+boxes = cross(ROWS, COLS)
+row_units = [cross(r, COLS) for r in ROWS]
+column_units = [cross(ROWS, c) for c in COLS]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-unitlist = row_units + column_units + square_units
+diagonal_units = [[r + c for r, c in (zip(ROWS, COLS))], [a + b for a, b in zip(ROWS, COLS[::-1])]]
+unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
 
@@ -97,7 +85,20 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-    return dict(map(lambda t: (t[0], cols if t[1] == '.' else t[1]), zip(boxes, grid)))
+    return dict(map(lambda t: (t[0], COLS if t[1] == '.' else t[1]), zip(boxes, grid)))
+
+
+def display(values):
+    """
+    Display the values as a 2-D grid.
+    :param  values: The sudoku in dictionary form
+    """
+    width = 1 + max(len(values[s]) for s in boxes)
+    line = '+'.join(['-' * (width * 3)] * 3)
+    for r in ROWS:
+        print(''.join(values[r + c].center(width) + ('|' if c in '36' else '')
+                      for c in COLS))
+        if r in 'CF': print(line)
 
 
 def eliminate(values):
@@ -106,8 +107,8 @@ def eliminate(values):
         :return:
             Resulting Sudoku in dictionary form after eliminating values.
         """
-    solved_values = [box for box in values.keys() if len(values[box]) == 1]
-    for box in solved_values:
+    solved_boxes = [box for box in values.keys() if len(values[box]) == 1]
+    for box in solved_boxes:
         digit = values[box]
         for peer in peers[box]:
             values = __remove_digit(values, peer, digit)
@@ -145,18 +146,20 @@ def reduce_puzzle(values):
         # Check how many boxes have a determined value
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
 
-        # Your code here: Use the Eliminate Strategy
         values = eliminate(values)
-        # Your code here: Use the Only Choice Strategy
         values = only_choice(values)
+        values = naked_twins(values)
 
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
+
         # If no new values were added, stop the loop.
         stalled = solved_values_before == solved_values_after
+
         # Sanity check, return False if there is a box with zero available values:
         if len([box for box in values.keys() if len(values[box]) == 0]):
             return False
+
     return values
 
 
@@ -166,6 +169,7 @@ def search(values):
     :param values:
     :return:
     """
+
     values = reduce_puzzle(values)
 
     if values is False:
@@ -174,24 +178,20 @@ def search(values):
     if all(len(values[box]) == 1 for box in boxes):
         return values
 
+    n, box = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
+
+    for digit in values[box]:
+        new_sudoku = values.copy()
+        values = assign_value(new_sudoku, box, digit)
+        attempt = search(new_sudoku)
+        if attempt:
+            return attempt
+
+    return False
+
 
 def solve(grid):
-    """
-    Find the solution to a Sudoku grid.
-    :param grid: a string representing a sudoku grid.
-    :return:
-        The dictionary representation of the final sudoku grid. False if no solution exists.
-    """
-    stalled = False
-    while not stalled:
-        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
-        values = eliminate(values)
-        values = only_choice(values)
-        solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
-        stalled = solved_values_before == solved_values_after
-        if len([box for box in values.keys() if len(values[box]) == 0]):
-            return False
-    return values
+    return search(grid_values(grid))
 
 
 if __name__ == '__main__':
