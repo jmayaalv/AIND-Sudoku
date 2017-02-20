@@ -3,7 +3,14 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+
+A: The naked twins strategy works by identifing the boxes, inside a unit, that have the same 2 digits as possible solutions and eliminating the digits from the other boxes that have other digits.
+
+Constraint propagation is used here because although it can't determined the correct value for the twin boxes, we can be sure that none of the other boxes in the peer will have one of those values. The values are only feasible in the twin boxes.
+
+The algorithm implemented starts identifying the twins, this is done by filtering the boxes with a pair of digits (boxes_with_pair) and then iterating over the peers to find a box with the same digits. (twin)
+Once the twins have been identified, the digits in the twins are removed from the other peers in the unit.
+
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  

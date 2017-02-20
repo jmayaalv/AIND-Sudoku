@@ -3,6 +3,7 @@ assignments = []
 rows = 'ABCDEFGHI'
 cols = '123456789'
 
+
 def display(values):
     """
     Display the values as a 2-D grid.
@@ -26,6 +27,7 @@ def assign_value(values, box, value):
         assignments.append(values.copy())
     return values
 
+
 def __remove_digit(values, box, digit):
     """
     Removes a digt from a box
@@ -33,8 +35,7 @@ def __remove_digit(values, box, digit):
     :param box: box where the values wants to be removed
     :return: updated dict with the puzzle value
     """
-    return  assign_value(values, box, values[box].replace(digit, ''))
-
+    return assign_value(values, box, values[box].replace(digit, ''))
 
 
 def cross(a, b):
@@ -97,9 +98,6 @@ def grid_values(grid):
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
     return dict(map(lambda t: (t[0], cols if t[1] == '.' else t[1]), zip(boxes, grid)))
-
-
-
 
 
 def eliminate(values):
