@@ -16,6 +16,9 @@ Once the twins have been identified, the digits in the twins are removed from th
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
 A: Having each digit in each of the diagonals in the square is another constraint to the problem. To add the constraint I just needed to add two more units, one for the left and one for the right diagonals, to the list of units in the game.
 
+By adding the additional diagonal units, new constraints are introduced to the problem. This constrains force the algorithm to discard a solution when there is a repeated digit in the diagonals. It's important to notice that the algorithms to find the sudoku solution
+  didn't really change, however with the new restrictions the algorithms would, most probably, take a few more iteration to find a solution.
+
 
 ### Install
 

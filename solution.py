@@ -1,7 +1,7 @@
-assignments = []
+import logging
+import utils
 
-ROWS = 'ABCDEFGHI'
-COLS = '123456789'
+assignments = []
 
 
 def assign_value(values, box, value):
@@ -9,6 +9,11 @@ def assign_value(values, box, value):
     Please use this function to update your values dictionary!
     Assigns a value to a given box. If it updates the board record it.
     """
+    assert len(value) > 0
+    # A solution will be found when there is one digit in the box. If the box is empty there is an error and we
+    # should stop the execution
+    
+    logging.info("assigning value: %s to box: %s", value, box)
     values[box] = value
     if len(value) == 1:
         assignments.append(values.copy())
@@ -23,24 +28,6 @@ def __remove_digit(values, box, digit):
     :return: updated dict with the puzzle value
     """
     return assign_value(values, box, values[box].replace(digit, ''))
-
-
-def cross(a, b):
-    """Cross product of elements in A and elements in B.
-    :param a: A list of items in A
-    :param b: A list of items in B
-    """
-    return [s + t for s in a for t in b]
-
-
-boxes = cross(ROWS, COLS)
-row_units = [cross(r, COLS) for r in ROWS]
-column_units = [cross(ROWS, c) for c in COLS]
-square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-diagonal_units = [[r + c for r, c in (zip(ROWS, COLS))], [a + b for a, b in zip(ROWS, COLS[::-1])]]
-unitlist = row_units + column_units + square_units + diagonal_units
-units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
 
 
 def __find_naked_twins(values, unit):
@@ -65,10 +52,15 @@ def naked_twins(values):
     :return:
         the values dictionary with the naked twins eliminated from peers.
     """
-    for unit in unitlist:
+    for unit in utils.unitlist:
+
+        # find the naked twins on each unit
         twins = __find_naked_twins(values, unit)
         if len(twins) == 2:
-            twin_digits = values[twins[0]]
+
+            twin_digits = values[twins[0]]  # get the digits assigned to the twins. (both boxes have the same values)
+
+            # iterate over all the peers that are not twins and remove the values on the twins
             for box in unit:
                 if box not in twins:
                     for digit in twin_digits:
@@ -85,7 +77,7 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-    return dict(map(lambda t: (t[0], COLS if t[1] == '.' else t[1]), zip(boxes, grid)))
+    return dict(map(lambda t: (t[0], utils.COLS if t[1] == '.' else t[1]), zip(utils.boxes, grid)))
 
 
 def display(values):
@@ -93,11 +85,11 @@ def display(values):
     Display the values as a 2-D grid.
     :param  values: The sudoku in dictionary form
     """
-    width = 1 + max(len(values[s]) for s in boxes)
+    width = 1 + max(len(values[s]) for s in utils.boxes)
     line = '+'.join(['-' * (width * 3)] * 3)
-    for r in ROWS:
+    for r in utils.ROWS:
         print(''.join(values[r + c].center(width) + ('|' if c in '36' else '')
-                      for c in COLS))
+                      for c in utils.COLS))
         if r in 'CF': print(line)
 
 
@@ -110,7 +102,7 @@ def eliminate(values):
     solved_boxes = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_boxes:
         digit = values[box]
-        for peer in peers[box]:
+        for peer in utils.peers[box]:
             values = __remove_digit(values, peer, digit)
     return values
 
@@ -121,7 +113,7 @@ def only_choice(values):
         :return:
             Resulting Sudoku in dictionary form after filling in only choices.
     """
-    for unit in unitlist:
+    for unit in utils.unitlist:
         boxes_in_unit = [box for box in unit]
         for box in boxes_in_unit:
             digits = [d for d in values[box]]
@@ -175,10 +167,10 @@ def search(values):
     if values is False:
         return False
 
-    if all(len(values[box]) == 1 for box in boxes):
+    if all(len(values[box]) == 1 for box in utils.boxes):
         return values
 
-    n, box = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
+    n, box = min((len(values[box]), box) for box in utils.boxes if len(values[box]) > 1)
 
     for digit in values[box]:
         new_sudoku = values.copy()
